@@ -1,0 +1,10 @@
+.env
+youtube_token.json
+client_secrets.json
+staging/
+output/
+data/models/
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/

@@ -1,0 +1,67 @@
+name: Islamic History — Daily Upload
+
+# Uploads one 10-15 min Islamic history documentary every day at 10:00 AM UTC
+# UTC 10 AM = EST 5 AM / CST 4 AM / PST 2 AM
+# Change cron to your preferred time. Run workflow_dispatch for manual trigger.
+
+on:
+  schedule:
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180   # 3-hour cap (script gen + TTS + visuals + render + upload)
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        working-directory: personal/youtube-islamic-history
+        run: pip install -e . --quiet
+
+      - name: Write secrets to files
+        working-directory: personal/youtube-islamic-history
+        env:
+          ISLAMIC_YOUTUBE_TOKEN_JSON: ${{ secrets.ISLAMIC_YOUTUBE_TOKEN_JSON }}
+          ISLAMIC_YOUTUBE_CLIENT_SECRETS_JSON: ${{ secrets.ISLAMIC_YOUTUBE_CLIENT_SECRETS_JSON }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          echo "$ISLAMIC_YOUTUBE_TOKEN_JSON" > youtube_token.json
+          echo "$ISLAMIC_YOUTUBE_CLIENT_SECRETS_JSON" > client_secrets.json
+          printf 'ANTHROPIC_API_KEY=%s\nELEVENLABS_API_KEY=%s\nELEVENLABS_VOICE_ID=%s\nOPENAI_API_KEY=%s\nPIXABAY_API_KEY=%s\n' \
+            "$ANTHROPIC_API_KEY" "$ELEVENLABS_API_KEY" "$ELEVENLABS_VOICE_ID" "$OPENAI_API_KEY" "$PIXABAY_API_KEY" > .env
+
+      - name: Run pipeline
+        working-directory: personal/youtube-islamic-history
+        run: python scripts/run_pipeline.py
+
+      - name: Commit updated topic queue and history
+        if: always()
+        working-directory: personal/youtube-islamic-history
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add data/topics.yaml data/history.db 2>/dev/null || true
+          git diff --cached --quiet && echo "Nothing to commit" || \
+            git commit -m "chore: advance islamic topic queue [skip ci]" && git push

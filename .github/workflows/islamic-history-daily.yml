@@ -1,0 +1,62 @@
+name: Daily Islamic History Upload
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # 8:00 AM UTC every day
+  workflow_dispatch:        # manual trigger from GitHub UI anytime
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # needed to push updated topics.yaml back
+
+    defaults:
+      run:
+        working-directory: personal/youtube-islamic-history
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache Kokoro TTS models
+        uses: actions/cache@v4
+        with:
+          path: personal/youtube-islamic-history/data/models/
+          key: kokoro-models-v0_19
+
+      - name: Install FFmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Write credentials
+        env:
+          ANTHROPIC_API_KEY:        ${{ secrets.ANTHROPIC_API_KEY }}
+          PIXABAY_API_KEY:           ${{ secrets.PIXABAY_API_KEY }}
+          YOUTUBE_TOKEN_JSON:        ${{ secrets.YOUTUBE_TOKEN_JSON }}
+          YOUTUBE_CLIENT_SECRETS_JSON: ${{ secrets.YOUTUBE_CLIENT_SECRETS_JSON }}
+        run: |
+          printf "ANTHROPIC_API_KEY=%s\n"           "$ANTHROPIC_API_KEY" >> .env
+          printf "PIXABAY_API_KEY=%s\n"             "$PIXABAY_API_KEY"   >> .env
+          printf "YOUTUBE_CLIENT_SECRETS=%s\n"      "client_secrets.json" >> .env
+          printf "YOUTUBE_TOKEN_FILE=%s\n"          "youtube_token.json"  >> .env
+          printf '%s' "$YOUTUBE_TOKEN_JSON"           > youtube_token.json
+          printf '%s' "$YOUTUBE_CLIENT_SECRETS_JSON"  > client_secrets.json
+
+      - name: Run pipeline
+        run: python scripts/run_pipeline.py
+
+      - name: Commit topics update
+        run: |
+          git config user.name  "Islamic History Bot"
+          git config user.email "bot@noreply.github.com"
+          git add data/topics.yaml
+          git diff --staged --quiet || git commit -m "chore: mark topic done [skip ci]"
+          git push
