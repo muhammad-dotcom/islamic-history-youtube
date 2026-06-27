@@ -7,14 +7,13 @@ Override with KOKORO_VOICE in .env.
 
 from __future__ import annotations
 
-import subprocess
 import urllib.request
 import wave
 from pathlib import Path
 
 import numpy as np
 
-from .config import DATA_DIR, FFMPEG_PATH, KOKORO_VOICE
+from .config import DATA_DIR, KOKORO_VOICE
 
 _MODELS_DIR = DATA_DIR / "models"
 _MODEL_FILE = _MODELS_DIR / "kokoro-v0_19.onnx"
@@ -79,12 +78,5 @@ def generate(narration: str, output_path: Path) -> Path:
     wav_path = output_path.with_suffix(".wav")
     _save_wav(combined, sample_rate, wav_path)
 
-    # Convert WAV → MP3 via FFmpeg
-    subprocess.run(
-        [FFMPEG_PATH, "-y", "-i", str(wav_path), "-codec:a", "libmp3lame", "-qscale:a", "2", str(output_path)],
-        check=True, capture_output=True,
-    )
-    wav_path.unlink(missing_ok=True)
-
-    print(f"\n  Narration saved: {output_path}")
-    return output_path
+    print(f"\n  Narration saved: {wav_path}")
+    return wav_path

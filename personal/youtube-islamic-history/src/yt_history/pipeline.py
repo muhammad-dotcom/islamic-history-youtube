@@ -57,8 +57,7 @@ def run(
     try:
         # 3. Voiceover
         print("\n[2/6] Generating voiceover...")
-        narration_path = staging / "narration.mp3"
-        voice_gen.generate(narration_text, narration_path)
+        narration_path = voice_gen.generate(narration_text, staging / "narration.mp3")
 
         # 4. Visuals
         print("\n[3/6] Generating visuals...")

@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .config import FFMPEG_PATH, VIDEO_FPS, VIDEO_HEIGHT, VIDEO_WIDTH
 
-_FFPROBE = FFMPEG_PATH.replace("ffmpeg.exe", "ffprobe.exe")
+_FFPROBE = FFMPEG_PATH.replace("ffmpeg.exe", "ffprobe.exe") if FFMPEG_PATH.endswith(".exe") else "ffprobe"
 
 
 def _ffprobe_duration(path: Path) -> float:
