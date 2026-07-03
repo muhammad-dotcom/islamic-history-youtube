@@ -51,10 +51,10 @@ def main() -> None:
     env = dict(line.split("=", 1) for line in (HERE / ".env").read_text().splitlines() if "=" in line)
 
     secrets = {
-        "ANTHROPIC_API_KEY":           env["ANTHROPIC_API_KEY"],
-        "PIXABAY_API_KEY":             env["PIXABAY_API_KEY"],
-        "YOUTUBE_TOKEN_JSON":          (HERE / "youtube_token.json").read_text().strip(),
-        "YOUTUBE_CLIENT_SECRETS_JSON": (HERE / "client_secrets.json").read_text().strip(),
+        "ANTHROPIC_API_KEY":                    env["ANTHROPIC_API_KEY"],
+        "PIXABAY_API_KEY":                      env["PIXABAY_API_KEY"],
+        "ISLAMIC_YOUTUBE_TOKEN_JSON":           (HERE / "youtube_token.json").read_text().strip(),
+        "ISLAMIC_YOUTUBE_CLIENT_SECRETS_JSON":  (HERE / "client_secrets.json").read_text().strip(),
     }
 
     print(f"Setting {len(secrets)} secrets on {REPO}...")

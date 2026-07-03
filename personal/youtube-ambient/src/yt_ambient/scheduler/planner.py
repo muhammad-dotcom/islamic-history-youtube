@@ -27,6 +27,21 @@ SOUND_ROTATION = [
     "stream",
 ]
 
+# These need sample files in data/audio_samples/<type>/ — the planner skips
+# them when the folder is empty (e.g. on CI runners, where samples aren't in git).
+SAMPLE_BASED = {"forest", "ocean", "stream", "fireplace", "cafe"}
+_SAMPLES_DIR = Path("data/audio_samples")
+_SAMPLE_EXTS = {".wav", ".flac", ".ogg"}
+
+
+def _is_available(sound_type: str) -> bool:
+    if sound_type not in SAMPLE_BASED:
+        return True
+    folder = _SAMPLES_DIR / sound_type
+    if not folder.exists():
+        return False
+    return any(p.suffix.lower() in _SAMPLE_EXTS for p in folder.iterdir())
+
 # Alternating durations: study then sleep, then repeat
 DURATION_ROTATION = [1.0, 8.0]
 
@@ -46,8 +61,20 @@ class Planner:
     # ------------------------------------------------------------------
 
     def next(self) -> tuple[str, float]:
-        """Return (sound_type, duration_hours) for the next video to produce."""
-        sound_type = SOUND_ROTATION[self._state["sound_idx"] % len(SOUND_ROTATION)]
+        """Return (sound_type, duration_hours) for the next video to produce.
+
+        Skips sample-based sound types whose sample folder is empty, advancing
+        the rotation state past them so they aren't retried every run.
+        """
+        for _ in range(len(SOUND_ROTATION)):
+            sound_type = SOUND_ROTATION[self._state["sound_idx"] % len(SOUND_ROTATION)]
+            if _is_available(sound_type):
+                break
+            print(f"  Planner: skipping '{sound_type}' (no audio samples available)")
+            self._state["sound_idx"] += 1
+            self._save_state()
+        else:
+            raise RuntimeError("No sound types available — check data/audio_samples/")
         duration = DURATION_ROTATION[self._state["duration_idx"] % len(DURATION_ROTATION)]
         return sound_type, duration
 

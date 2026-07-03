@@ -14,15 +14,16 @@ os.chdir(PROJECT)
 
 from yt_ambient.pipeline import Pipeline
 
-# (sound_type, duration_hours)
+# Already uploaded: brown 1h, brown 8h, rain 1h, rain 8h, pink 1h
+# Queue: everything synthesizable that's still missing
 QUEUE = [
-    ("brown",   8.0),   # biggest sleep search term
-    ("white",   8.0),   # babies / office noise masking
-    ("rain",    8.0),   # #1 nature sleep sound
-    ("pink",    1.0),   # study/focus — 1h version
-    ("grey",    1.0),   # lesser-known but dedicated audience
-    ("thunder", 1.0),   # unique, low competition
-    ("brown",   1.0),   # study version of top sound
+    ("pink",    8.0),   # deep sleep — pink noise has dedicated audience
+    ("white",   1.0),   # baby sleep / office — huge search volume
+    ("white",   8.0),   # white noise 8 hours — one of YouTube's top searches
+    ("grey",    1.0),   # tinnitus relief / sensory — low competition niche
+    ("grey",    8.0),   # grey noise 8 hours straight
+    ("thunder", 1.0),   # thunderstorm study — unique, trending
+    ("thunder", 8.0),   # thunderstorm sleep 8 hours
 ]
 
 def main():

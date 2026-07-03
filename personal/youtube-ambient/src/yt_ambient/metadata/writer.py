@@ -22,6 +22,22 @@ _DURATION_LABELS = {
 _HASHTAGS_COMMON = "#SleepSounds #AmbientSounds #RelaxingSounds #StudySounds #FocusSounds #ASMR #fyp #foryou #foryoupage #viral"
 
 # Per-type static templates used when Claude API is unavailable
+_TITLE_OVERRIDES: dict[str, dict[float, str]] = {
+    # Exact search phrases people type — duration-specific overrides
+    "brown":   {1.0: "Brown Noise 1 Hour | Study Focus & ADHD | No Music",
+                8.0: "Brown Noise 8 Hours | Deep Sleep & Focus | No Music"},
+    "white":   {1.0: "White Noise 1 Hour | Baby Sleep & Focus | No Music",
+                8.0: "White Noise 8 Hours | Sleep & Tinnitus Relief | No Music"},
+    "pink":    {1.0: "Pink Noise 1 Hour | Deep Focus & Memory | No Music",
+                8.0: "Pink Noise 8 Hours | Deep Sleep & Brain Boost | No Music"},
+    "grey":    {1.0: "Grey Noise 1 Hour | Tinnitus Relief & Focus | No Music",
+                8.0: "Grey Noise 8 Hours | Sleep & Tinnitus Relief | No Music"},
+    "rain":    {1.0: "Rain Sounds 1 Hour | Study & Relaxation | No Music",
+                8.0: "Rain Sounds 8 Hours | Deep Sleep & Anxiety Relief | No Music"},
+    "thunder": {1.0: "Thunder & Rain 1 Hour | Study Focus & Calm | No Music",
+                8.0: "Thunder & Rain 8 Hours | Deep Sleep Sounds | No Music"},
+}
+
 _TEMPLATES: dict[str, dict] = {
     "brown": {
         "title": "Brown Noise {dur} | Deep Sleep & Study Focus | No Music",
@@ -235,7 +251,8 @@ def _template_fallback(sound_type: str, duration_hours: float) -> dict:
     tmpl = _TEMPLATES.get(sound_type, _TEMPLATES["brown"])
     label = SOUND_LABELS.get(sound_type, sound_type.title())
 
-    title = tmpl["title"].replace("{dur}", dur)
+    override = _TITLE_OVERRIDES.get(sound_type, {}).get(duration_hours)
+    title = override if override else tmpl["title"].replace("{dur}", dur)
     body = tmpl["body"].replace("{dur}", dur.lower())
     cta = (
         "🔔 Subscribe for daily sleep & focus sounds — new video every day!\n"
@@ -262,8 +279,10 @@ Rules for every response:
 - Use SEO-friendly phrases like "sleep sounds", "study sounds", "focus sounds", "relaxing sounds", \
 "white noise", "ASMR", "nature ambiance", "calming sounds", "ambient sounds".
 - Title formula: "[Sound Name] [Duration] | [Benefit 1] & [Benefit 2] | No Music". \
-Sound name comes FIRST (best for SEO). Example: "Brown Noise 8 Hours | Deep Sleep & Study Focus | No Music". \
-Always end with "| No Music". Keep it under 100 characters.
+Sound name + duration come FIRST (best for SEO — people search the exact phrase). \
+Example: "Brown Noise 8 Hours | Deep Sleep & ADHD Focus | No Music". \
+Always end with "| No Music". Keep it under 100 characters. \
+Include the EXACT duration number (e.g. "8 Hours", "1 Hour") right after the sound name.
 - Description structure (in this order):
   1. First 2 lines: strong CTA — "🔔 Subscribe for daily sleep & focus sounds — new video every day!" and "👍 Like if this helped you sleep, study, or relax."
   2. One blank line.

@@ -29,6 +29,12 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
+      - name: Cache Kokoro TTS models
+        uses: actions/cache@v4
+        with:
+          path: personal/youtube-islamic-history/data/models/
+          key: kokoro-models-v0_19
+
       - name: Install FFmpeg
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
 
