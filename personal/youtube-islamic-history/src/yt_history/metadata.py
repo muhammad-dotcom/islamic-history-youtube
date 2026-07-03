@@ -92,4 +92,21 @@ class MetadataWriter:
 
         result["title"] = result["title"][:100]
         result["description"] = result["description"][:5000]
+        result["tags"] = self._sanitize_tags(result["tags"])
         return result
+
+    @staticmethod
+    def _sanitize_tags(tags: list[str]) -> list[str]:
+        """YouTube rejects tags containing commas and caps the combined
+        length of all tags at 500 characters."""
+        cleaned: list[str] = []
+        total = 0
+        for tag in tags:
+            tag = tag.replace(",", "").strip()
+            if not tag:
+                continue
+            if total + len(tag) > 500:
+                break
+            cleaned.append(tag)
+            total += len(tag)
+        return cleaned
