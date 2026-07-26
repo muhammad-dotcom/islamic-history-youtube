@@ -1,5 +1,6 @@
 .env
 youtube_token.json
+youtube_token.json.bak*
 client_secrets.json
 staging/
 output/

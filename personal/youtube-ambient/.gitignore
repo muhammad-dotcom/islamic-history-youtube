@@ -12,6 +12,7 @@ output/
 # YouTube OAuth credentials (sensitive)
 client_secrets.json
 youtube_token.json
+youtube_token.json.bak*
 
 # Python
 __pycache__/
