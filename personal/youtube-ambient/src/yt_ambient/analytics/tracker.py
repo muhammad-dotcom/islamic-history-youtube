@@ -22,15 +22,16 @@ class AnalyticsTracker:
         sound_type: str,
         duration_hours: float,
         title: str,
+        content_type: str = "long",
     ) -> None:
         with self._conn() as conn:
             conn.execute(
                 """
                 INSERT OR IGNORE INTO videos
-                    (video_id, sound_type, duration_hours, title, uploaded_at)
-                VALUES (?, ?, ?, ?, ?)
+                    (video_id, sound_type, duration_hours, title, uploaded_at, content_type)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (video_id, sound_type, duration_hours, title, datetime.utcnow().isoformat()),
+                (video_id, sound_type, duration_hours, title, datetime.utcnow().isoformat(), content_type),
             )
 
     def get_view_weights(self) -> dict[str, float]:
@@ -61,6 +62,9 @@ class AnalyticsTracker:
                 )
                 """
             )
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(videos)")}
+            if "content_type" not in columns:
+                conn.execute("ALTER TABLE videos ADD COLUMN content_type TEXT DEFAULT 'long'")
 
     def _conn(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)

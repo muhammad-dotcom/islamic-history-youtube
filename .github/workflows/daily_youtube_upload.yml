@@ -36,6 +36,13 @@ jobs:
         working-directory: personal/youtube-ambient
         run: pip install -e . --quiet
 
+      - name: Generate nature backgrounds (~4 min, no external assets needed)
+        working-directory: personal/youtube-ambient
+        run: python scripts/generate_bg_videos.py
+        # data/visuals/nature/ isn't committed to git (large binaries) — CI
+        # starts from a fresh checkout each run, so this regenerates them
+        # every time. Used by both long-form nature videos and Shorts footage.
+
       - name: Write secrets to files
         working-directory: personal/youtube-ambient
         env:
@@ -51,12 +58,17 @@ jobs:
         working-directory: personal/youtube-ambient
         run: python scripts/run_pipeline.py --auto
 
+      - name: Run Shorts pipeline (auto — independent rotation)
+        if: always()
+        working-directory: personal/youtube-ambient
+        run: python scripts/run_shorts.py --auto
+
       - name: Commit updated schedule state
         if: always()
         working-directory: personal/youtube-ambient
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add data/schedule_state.json data/analytics.db data/playlist_ids.json 2>/dev/null || true
+          git add data/schedule_state.json data/shorts_schedule_state.json data/analytics.db data/playlist_ids.json 2>/dev/null || true
           git diff --cached --quiet && echo "Nothing to commit" || \
             git commit -m "chore: advance upload schedule [skip ci]" && git push
